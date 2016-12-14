@@ -43,7 +43,7 @@ provider "rabbitmq" {
 resource "rabbitmq_vhost" "vhost_1" {
 	depends_on = ["null_resource.wait"]
 
-	name = "vhost_1"
+	name = "terraform"
 }
 
 resource "rabbitmq_permissions" "guest" {
@@ -79,9 +79,22 @@ resource "rabbitmq_queue" "debug" {
 		durable = false
 		auto_delete = true
 		arguments = {
-			message-ttl = 60000
+			//x-message-ttl = 60000
 		}
 	}
+}
+
+resource "rabbitmq_policy" "test" {
+    name = "debug-ttl"
+    vhost = "${rabbitmq_permissions.guest.vhost}"
+    policy {
+        pattern = "${rabbitmq_queue.debug.name}"
+        priority = 0
+        apply_to = "queues"
+        definition {
+          message-ttl = 6000
+        }
+    }
 }
 
 resource "rabbitmq_binding" "binding" {
